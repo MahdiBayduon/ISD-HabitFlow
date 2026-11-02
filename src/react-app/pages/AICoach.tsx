@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Bot, User, Sparkles, Target, BookOpen } from "lucide-react";
+import { Send, Bot, User, Sparkles } from "lucide-react";
 import { apiRequest } from "@/react-app/hooks/useApi";
 import Card from "@/react-app/components/Card";
 
@@ -10,29 +10,14 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-interface AICoachContext {
-  habits: Array<{
-    id: number;
-    name: string;
-    category: 'good' | 'bad';
-    description?: string;
-  }>;
-  recentJournalEntries: Array<{
-    date: string;
-    content: string;
-    sentiment_score?: number;
-  }>;
-}
-
 export default function AICoach() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [context, setContext] = useState<AICoachContext | null>(null);
+  const [responseSource, setResponseSource] = useState<'ai' | 'fallback' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetchContext();
     initializeChat();
   }, []);
 
@@ -42,31 +27,6 @@ export default function AICoach() {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchContext = async () => {
-    try {
-      const [habits, journalEntries] = await Promise.all([
-        apiRequest('/api/habits'),
-        apiRequest('/api/journal')
-      ]);
-
-      setContext({
-        habits: (habits as any[]).map((h: any) => ({
-          id: h.id,
-          name: h.name,
-          category: h.category,
-          description: h.description
-        })),
-        recentJournalEntries: (journalEntries as any[]).slice(0, 5).map((j: any) => ({
-          date: j.date,
-          content: j.content,
-          sentiment_score: j.sentiment_score
-        }))
-      });
-    } catch (error) {
-      console.error('Failed to fetch context:', error);
-    }
   };
 
   const initializeChat = () => {
@@ -94,19 +54,19 @@ export default function AICoach() {
     setIsLoading(true);
 
     try {
-      const response = await apiRequest('/api/ai/coach/chat', {
+      const response = await apiRequest<{ message: string; source: 'ai' | 'fallback' }>('/api/ai/coach/chat', {
         method: 'POST',
         body: JSON.stringify({
           message: inputMessage.trim(),
-          context: context,
           conversation_history: messages.slice(-10) // Last 10 messages for context
         })
       });
 
+      setResponseSource(response.source);
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: (response as any).message,
+        content: response.message,
         timestamp: new Date()
       };
 
@@ -138,6 +98,8 @@ export default function AICoach() {
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 min-h-screen transition-colors duration-300">
+      <p className="text-sm text-gray-500">When AI is configured, your habits and recent journal excerpts are used for coaching. Otherwise, general guidance is shown. Chat is not saved.</p>
+      {responseSource === 'fallback' && <p role="status" className="text-amber-700">AI is unavailable. This response uses general fallback guidance.</p>}
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-2">
@@ -150,41 +112,6 @@ export default function AICoach() {
           Get personalized strategies and guidance for building better habits
         </p>
       </div>
-
-      {/* Context Cards */}
-      {context && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Card className="p-4">
-            <div className="flex items-center mb-2">
-              <Target className="w-5 h-5 text-blue-600 mr-2" />
-              <h3 className="font-semibold text-gray-900 dark:text-white">Your Habits</h3>
-            </div>
-            <div className="space-y-1 max-h-24 overflow-y-auto">
-              {context.habits.map(habit => (
-                <div key={habit.id} className="flex items-center text-sm">
-                  <span className={`w-2 h-2 rounded-full mr-2 ${
-                    habit.category === 'good' ? 'bg-green-500' : 'bg-red-500'
-                  }`} />
-                  <span className="text-gray-700 dark:text-gray-300">{habit.name}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center mb-2">
-              <BookOpen className="w-5 h-5 text-purple-600 mr-2" />
-              <h3 className="font-semibold text-gray-900 dark:text-white">Recent Journal Insights</h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {context.recentJournalEntries.length > 0 
-                ? `${context.recentJournalEntries.length} recent entries analyzed`
-                : "No journal entries yet"
-              }
-            </p>
-          </Card>
-        </div>
-      )}
 
       {/* Chat Interface */}
       <Card className="flex flex-col h-[600px]">
@@ -280,3 +207,4 @@ export default function AICoach() {
     </div>
   );
 }
+

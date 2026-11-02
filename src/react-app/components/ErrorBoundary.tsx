@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -32,12 +32,12 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="text-gray-700 mb-4">
               {this.state.error?.message || 'An unexpected error occurred'}
             </p>
-            <details className="mb-4">
+            {import.meta.env.DEV && <details className="mb-4">
               <summary className="cursor-pointer text-sm text-gray-500 mb-2">Error details</summary>
               <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
                 {this.state.error?.stack}
               </pre>
-            </details>
+            </details>}
             <button
               onClick={() => {
                 this.setState({ hasError: false, error: null });
@@ -55,3 +55,4 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+

@@ -14,10 +14,10 @@ export const HabitSchema = z.object({
 });
 
 export const CreateHabitSchema = z.object({
-  name: z.string().min(1, "Habit name is required"),
-  description: z.string().optional(),
+  name: z.string().trim().min(1, "Habit name is required").max(120),
+  description: z.string().trim().max(1000).optional(),
   category: z.enum(['good', 'bad']),
-  target_frequency: z.number().min(1).max(10).default(1),
+  target_frequency: z.literal(1).default(1),
 });
 
 export const UpdateHabitSchema = CreateHabitSchema.partial();
@@ -26,7 +26,7 @@ export const UpdateHabitSchema = CreateHabitSchema.partial();
 export const HabitEntrySchema = z.object({
   id: z.number(),
   user_id: z.string(),
-  habit_id: z.number(),
+  habit_id: z.number().int().positive(),
   date: z.string(),
   completed: z.boolean().default(false),
   notes: z.string().nullable(),
@@ -35,10 +35,10 @@ export const HabitEntrySchema = z.object({
 });
 
 export const CreateHabitEntrySchema = z.object({
-  habit_id: z.number(),
+  habit_id: z.number().int().positive(),
   date: z.string(),
   completed: z.boolean(),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
 });
 
 // Journal Entry types
@@ -49,13 +49,14 @@ export const JournalEntrySchema = z.object({
   content: z.string(),
   sentiment_score: z.number().nullable(),
   ai_feedback: z.string().nullable(),
+  analysis_source: z.enum(['ai', 'basic']).optional(),
   created_at: z.string(),
   updated_at: z.string(),
 });
 
 export const CreateJournalEntrySchema = z.object({
   date: z.string(),
-  content: z.string().min(1, "Journal content is required"),
+  content: z.string().trim().min(1, "Journal content is required").max(10000),
 });
 
 // Group types
@@ -135,3 +136,4 @@ export type Challenge = z.infer<typeof ChallengeSchema>;
 export type ChallengeParticipant = z.infer<typeof ChallengeParticipantSchema>;
 export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
 export type AIInsight = z.infer<typeof AIInsightSchema>;
+

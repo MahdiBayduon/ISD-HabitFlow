@@ -1,22 +1,23 @@
+import { useState } from "react";
 import { useAuth } from "@getmocha/users-service/react";
-import { Navigate, useNavigate } from "react-router";
+import { Navigate } from "react-router";
 import { Target, BarChart3, Users, Sparkles, ArrowRight, CheckCircle } from "lucide-react";
 
 const features = [
   {
     icon: Target,
     title: "Smart Habit Tracking",
-    description: "Build good habits and break bad ones with AI-powered insights and personalized recommendations.",
+    description: "Build good habits and break bad ones with daily check-ins and personalized coaching.",
   },
   {
     icon: BarChart3,
     title: "Progress Analytics",
-    description: "Visualize your journey with detailed charts, streak tracking, and predictive insights.",
+    description: "Visualize your journey with completion charts and streak tracking.",
   },
   {
     icon: Users,
     title: "Community Challenges",
-    description: "Join groups, participate in challenges, and stay motivated with like-minded individuals.",
+    description: "Explore the planned community experience with clearly labeled sample challenges.",
   },
   {
     icon: Sparkles,
@@ -27,16 +28,17 @@ const features = [
 
 const benefits = [
   "Track multiple habits with ease",
-  "AI-generated motivational messages",
-  "Community support and challenges",
+  "Contextual coaching with optional AI integration",
+  "Community concept preview",
   "Detailed progress analytics",
   "Daily reflection journaling",
-  "Streak tracking and rewards",
+  "Daily completion and streak tracking",
 ];
 
 export default function Home() {
   const { user, isPending } = useAuth();
-  const navigate = useNavigate();
+  const [loginError, setLoginError] = useState("");
+  const [isStarting, setIsStarting] = useState(false);
 
   // Redirect if already logged in
   if (user) {
@@ -51,9 +53,18 @@ export default function Home() {
     );
   }
 
-  const handleGetStarted = () => {
-    // Navigate directly to dashboard
-    navigate('/dashboard');
+  const handleGetStarted = async () => {
+    setIsStarting(true);
+    setLoginError("");
+    try {
+      const response = await fetch('/api/oauth/google/redirect_url');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Sign in is unavailable.');
+      window.location.assign(data.redirectUrl);
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : 'Sign in failed.');
+      setIsStarting(false);
+    }
   };
 
   return (
@@ -74,15 +85,17 @@ export default function Home() {
             </p>
             <button
               onClick={handleGetStarted}
+              disabled={isStarting}
               className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-full hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Get Started Free
+              Get Started
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
           </div>
         </div>
       </div>
 
+      {loginError && <p role="alert" className="text-center text-red-700 px-6">{loginError}</p>}
       {/* Features Section */}
       <div className="py-16 lg:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,7 +104,7 @@ export default function Home() {
               Everything you need to succeed
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Our comprehensive platform combines proven habit science with cutting-edge AI to maximize your success.
+              Track your routines, reflect on your progress, and get practical support in one place.
             </p>
           </div>
           
@@ -124,8 +137,7 @@ export default function Home() {
                 Why choose HabitFlow?
               </h2>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                Join thousands of users who have already transformed their lives with our
-                science-backed approach to habit formation.
+                Build a routine around daily check-ins, thoughtful reflection, and practical coaching.
               </p>
               <div className="space-y-4">
                 {benefits.map((benefit, index) => (
@@ -184,6 +196,7 @@ export default function Home() {
           </p>
           <button
             onClick={handleGetStarted}
+              disabled={isStarting}
             className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-full hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Start Building Better Habits
@@ -194,3 +207,4 @@ export default function Home() {
     </div>
   );
 }
+

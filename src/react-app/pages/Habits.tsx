@@ -22,6 +22,8 @@ export default function Habits() {
     target_frequency: 1,
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchHabits();
@@ -38,6 +40,9 @@ export default function Habits() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSaving) return;
+    setError("");
+    setIsSaving(true);
     
     try {
       if (editingHabit) {
@@ -55,18 +60,20 @@ export default function Habits() {
       resetForm();
       fetchHabits();
     } catch (error) {
-      console.error('Failed to save habit:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save habit');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this habit?')) return;
+    if (!confirm('Are you sure you want to archive this habit?')) return;
     
     try {
       await apiRequest(`/api/habits/${id}`, { method: 'DELETE' });
       fetchHabits();
     } catch (error) {
-      console.error('Failed to delete habit:', error);
+      setError(error instanceof Error ? error.message : 'Failed to archive habit');
     }
   };
 
@@ -106,6 +113,7 @@ export default function Habits() {
     
     setTimeout(() => {
       const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+      setEditingHabit(null);
       setFormData({
         ...randomSuggestion,
         target_frequency: 1,
@@ -117,6 +125,7 @@ export default function Habits() {
 
   return (
     <div className="p-6 space-y-6">
+      {error && <p role="alert" className="text-red-700">{error}</p>}
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -130,7 +139,7 @@ export default function Habits() {
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50"
           >
             <Sparkles className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-            {isGenerating ? 'Generating...' : 'AI Suggest'}
+            {isGenerating ? 'Generating...' : 'Try a Starter Habit'}
           </button>
           <button
             onClick={() => setIsFormOpen(true)}
@@ -191,19 +200,7 @@ export default function Habits() {
               />
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Target Frequency (times per day)
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={formData.target_frequency}
-                onChange={(e) => setFormData({ ...formData, target_frequency: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+            <p className="text-sm text-gray-500">Each habit has one daily check-in. For a habit you are breaking, completion means you met your avoidance goal.</p>
             
             <div className="flex justify-end gap-3 pt-4">
               <button
@@ -215,6 +212,7 @@ export default function Habits() {
               </button>
               <button
                 type="submit"
+                disabled={isSaving}
                 className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors"
               >
                 {editingHabit ? 'Update' : 'Create'} Habit
@@ -285,7 +283,7 @@ export default function Habits() {
               )}
               
               <div className="flex justify-between items-center text-sm text-gray-500">
-                <span>Target: {habit.target_frequency}x daily</span>
+                <span>One check-in daily</span>
                 <span>Created {new Date(habit.created_at).toLocaleDateString()}</span>
               </div>
             </Card>
@@ -295,3 +293,4 @@ export default function Habits() {
     </div>
   );
 }
+
