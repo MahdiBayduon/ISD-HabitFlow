@@ -45,7 +45,9 @@
     "typecheck": "npm run cf-typegen && tsc -b",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
-    "test:smoke": "node tests/smoke.mjs"
+    "test:smoke": "node tests/smoke.mjs",
+    "setup": "node scripts/setup.mjs",
+    "start": "vite"
   },
   "engines": {
     "node": ">=22.13.0"

@@ -22,27 +22,11 @@ The Community page is a roadmap preview. Group participation, leaderboards, noti
 Requires **Node.js 22.13+** (Node 24 recommended for the tested workflow) and npm.
 
 ```bash
-npm ci
+npm run setup
+npm start
 ```
 
-Copy `.dev.vars.example` to `.dev.vars` in the repository root. On macOS/Linux:
-
-```bash
-cp .dev.vars.example .dev.vars
-```
-
-PowerShell:
-
-```powershell
-Copy-Item .dev.vars.example .dev.vars
-```
-
-Then:
-
-```bash
-npm run db:migrate
-npm run dev
-```
+`setup` installs the locked dependencies, creates `.dev.vars` from the safe local-demo example if absent, applies local migrations, and checks TypeScript. It preserves an existing `.dev.vars`. The same commands work in PowerShell, Command Prompt and macOS/Linux terminals. If PowerShell blocks `npm.ps1`, use `npm.cmd run setup` and `npm.cmd start`, or use Command Prompt.
 
 Open the local URL printed by Vite and select **Get Started**. With `DEMO_MODE=true`, the local callback creates a demo session. Local D1 data persists in `.wrangler/` between restarts.
 

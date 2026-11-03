@@ -2,11 +2,12 @@
 
 ## Local development
 
-1. Install Node 22.13+ and run `npm ci` at the root.
-2. Copy `.dev.vars.example` to `.dev.vars` and keep `DEMO_MODE=true` for loopback-only testing.
-3. Run `npm run db:migrate` to create local D1 tables and apply the constraint upgrade.
-4. Run `npm run dev` and open Vite's localhost URL.
-5. Select Get Started, create a habit, check it off, write a journal entry, and open the coach.
+1. Install Node 22.13+ (Node 24 LTS is recommended for the tested workflow).
+2. Open a terminal in the repository root and run `npm run setup`.
+3. Run `npm start` and open the localhost URL printed by Vite.
+4. Select Get Started, create a habit, check it off, write a journal entry, and open the coach.
+
+The setup command installs locked dependencies, creates the local-demo configuration only if missing, migrates local D1, and checks types. It uses Node built-ins and supports Windows, macOS and Linux. An existing `.dev.vars` is preserved. If PowerShell blocks npm scripts, use `npm.cmd run setup` / `npm.cmd start` or Command Prompt.
 
 The demo uses one local identity. Its sign-in flow uses a demo callback/session cookie; it does not validate a real Google identity. Restarting the app preserves local D1 data under `.wrangler/`. Removing that directory resets local data.
 
