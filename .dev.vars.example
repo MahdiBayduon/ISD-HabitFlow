@@ -1,0 +1,7 @@
+# Copy to .dev.vars for a local-only demo. No real credentials required.
+DEMO_MODE=true
+# Optional AI integration (never put this in a VITE_ variable):
+# OPENAI_API_KEY=
+# For production authentication, configure both Mocha service secrets:
+# MOCHA_USERS_SERVICE_API_URL=
+# MOCHA_USERS_SERVICE_API_KEY=

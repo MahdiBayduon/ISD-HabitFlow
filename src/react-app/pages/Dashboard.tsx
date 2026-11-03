@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router";
 import { Target, TrendingUp, Flame, Calendar, Plus, CheckCircle, Circle } from "lucide-react";
 import { useApi, apiRequest } from "@/react-app/hooks/useApi";
 import Card from "@/react-app/components/Card";
@@ -9,16 +10,11 @@ import type { DashboardStats, Habit, HabitEntry, AIInsight } from "@/shared/type
 export default function Dashboard() {
   const [todayEntries, setTodayEntries] = useState<(HabitEntry & { habit_name: string; category: string })[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
-  const today = format(new Date(), 'yyyy-MM-dd');
+  const today = new Date().toISOString().slice(0, 10);
 
-  const { data: stats, loading: statsLoading } = useApi<DashboardStats>('/api/dashboard/stats');
+  const { data: stats, loading: statsLoading, error: statsError, refetch: refreshStats } = useApi<DashboardStats>('/api/dashboard/stats');
   const { data: aiInsight, loading: insightLoading } = useApi<AIInsight>('/api/ai/daily-insight');
   
-  useEffect(() => {
-    fetchHabits();
-    fetchTodayEntries();
-  }, []);
-
   const fetchHabits = async () => {
     try {
       const data = await apiRequest<Habit[]>('/api/habits');
@@ -28,14 +24,19 @@ export default function Dashboard() {
     }
   };
 
-  const fetchTodayEntries = async () => {
+  const fetchTodayEntries = useCallback(async () => {
     try {
       const data = await apiRequest<(HabitEntry & { habit_name: string; category: string })[]>(`/api/habit-entries?date=${today}`);
       setTodayEntries(data);
     } catch (error) {
       console.error('Failed to fetch today entries:', error);
     }
-  };
+  }, [today]);
+
+  useEffect(() => {
+    void fetchHabits();
+    void fetchTodayEntries();
+  }, [fetchTodayEntries]);
 
   const toggleHabit = async (habitId: number, completed: boolean) => {
     try {
@@ -47,7 +48,8 @@ export default function Dashboard() {
           completed: !completed,
         }),
       });
-      fetchTodayEntries();
+      await fetchTodayEntries();
+      refreshStats();
     } catch (error) {
       console.error('Failed to toggle habit:', error);
     }
@@ -74,6 +76,8 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900 min-h-screen transition-colors duration-300">
+      {statsError && <p role="alert" className="text-red-700">{statsError}</p>}
+      <p className="text-sm text-gray-500">Daily check-ins use UTC. For habits you are breaking, check in when you meet your avoidance goal.</p>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -132,10 +136,10 @@ export default function Dashboard() {
                 <div className="text-center py-8">
                   <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500 mb-4">No habits yet. Start building good habits today!</p>
-                  <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors">
+                  <Link to="/habits" className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-colors">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Your First Habit
-                  </button>
+                  </Link>
                 </div>
               ) : (
                 habits.map((habit) => {
@@ -183,7 +187,7 @@ export default function Dashboard() {
         {/* AI Insight */}
         <div className="space-y-6">
           <Card className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">AI Daily Insight</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Daily Encouragement</h2>
             {insightLoading ? (
               <div className="animate-pulse">
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -233,3 +237,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

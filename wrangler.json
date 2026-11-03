@@ -1,27 +1,25 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "0199eddc-bea0-780d-bcdc-cd5f3ff13e0a",
+  "name": "habitflow",
   "main": "./src/worker/index.ts",
   "compatibility_date": "2025-06-17",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "observability": {
     "enabled": true
   },
   "upload_source_maps": true,
   "assets": {
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "0199eddc-bea0-780d-bcdc-cd5f3ff13e0a",
-      "database_id": "0199eddc-bea0-780d-bcdc-cd5f3ff13e0a"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "R2_BUCKET",
-      "bucket_name": "0199eddc-bea0-780d-bcdc-cd5f3ff13e0a"
+      "database_name": "habitflow",
+      "database_id": "0199eddc-bea0-780d-bcdc-cd5f3ff13e0a",
+      "migrations_dir": "migrations"
     }
   ]
 }

@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('darkMode');
-      return stored ? JSON.parse(stored) : false;
+      return stored === 'true';
     }
     return false;
   });
@@ -41,7 +41,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    setIsDarkMode(value => !value);
   };
 
   const setDarkMode = (isDark: boolean) => {
@@ -54,3 +54,4 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     children
   );
 }
+

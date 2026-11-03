@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { useState, useEffect } from "react";
 import { BookOpen, Calendar, Sparkles, Heart, Frown, Meh } from "lucide-react";
 import { apiRequest } from "@/react-app/hooks/useApi";
 import Card from "@/react-app/components/Card";
@@ -8,8 +8,9 @@ import type { JournalEntry, CreateJournalEntry } from "@/shared/types";
 export default function Journal() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [currentEntry, setCurrentEntry] = useState("");
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchEntries();
@@ -44,7 +45,7 @@ export default function Journal() {
       setCurrentEntry("");
       fetchEntries();
     } catch (error) {
-      console.error('Failed to save journal entry:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save journal entry');
     } finally {
       setIsSubmitting(false);
     }
@@ -66,6 +67,8 @@ export default function Journal() {
 
   return (
     <div className="p-6 space-y-6">
+      {error && <p role="alert" className="text-red-700">{error}</p>}
+      <p className="text-sm text-gray-500">Shows the latest 10 reflections. When AI is configured, your reflection and habit context are sent for analysis; otherwise basic keyword feedback is used.</p>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Daily Reflection</h1>
@@ -164,7 +167,7 @@ export default function Journal() {
                     <div className="flex items-start">
                       <Sparkles className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-1">AI Insight</h4>
+                        <h4 className="text-sm font-medium text-gray-900 mb-1">{entry.analysis_source === 'ai' ? 'AI Insight' : 'Reflection Feedback (Basic)'}</h4>
                         <p className="text-sm text-gray-700 leading-relaxed">
                           {entry.ai_feedback}
                         </p>
@@ -186,3 +189,4 @@ export default function Journal() {
     </div>
   );
 }
+
